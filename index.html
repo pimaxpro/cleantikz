@@ -1,1 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LaTeX & TikZ Studio (Format & Extract to Single File)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col">
 
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700 py-4 px-6 shadow-md">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <i data-lucide="file-code-2" class="w-8 h-8 text-blue-400"></i>
+        <h1 class="text-xl font-bold tracking-wide">LaTeX & TikZ Studio</h1>
+      </div>
+      <span class="text-xs text-slate-400 bg-slate-700 px-3 py-1 rounded-full">Gom TikZ vào 1 file duy nhất</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+    
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-slate-700 space-x-2">
+      <button id="tab-1-btn" onclick="switchTab(1)" class="px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-blue-600 text-white">
+        <i data-lucide="sparkles" class="w-4 h-4"></i>
+        <span>1. Format & Indent Code</span>
+      </button>
+      <button id="tab-2-btn" onclick="switchTab(2)" class="px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-slate-800 text-slate-400 hover:text-white">
+        <i data-lucide="scissors" class="w-4 h-4"></i>
+        <span>2. Gom Tất Cả TikZ Vào 1 File</span>
+      </button>
+    </div>
+
+    <!-- TOOL 1: FORMAT LATEX -->
+    <section id="tool-1" class="space-y-4">
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <p class="text-sm text-slate-400">Tự động thụt lề (indent) chuẩn convention cho các môi trường, ngoặc nhọn `{}` và ngoặc vuông `[]`.</p>
+        <div class="flex items-center space-x-3">
+          <label class="text-xs text-slate-300">Tab size:</label>
+          <select id="indent-size" class="bg-slate-800 border border-slate-700 text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500">
+            <option value="2">2 spaces</option>
+            <option value="4" selected>4 spaces</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Input -->
+        <div class="flex flex-col space-y-2">
+          <div class="flex justify-between items-center text-sm font-semibold text-slate-300">
+            <div class="flex items-center space-x-2">
+              <span>Code LaTeX gốc:</span>
+              <label class="cursor-pointer text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 px-2 py-0.5 rounded border border-slate-700 transition">
+                <i data-lucide="upload" class="w-3 h-3 inline mr-1"></i>Tải file (.tex/.txt)
+                <input type="file" accept=".tex,.txt" class="hidden" onchange="loadFile(event, 'input-format')">
+              </label>
+            </div>
+            <button onclick="clearText('input-format')" class="text-xs text-red-400 hover:underline">Xóa</button>
+          </div>
+          <textarea id="input-format" class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none" placeholder="Dán nội dung hoặc chọn file .tex / .txt vào đây..."></textarea>
+        </div>
+
+        <!-- Output -->
+        <div class="flex flex-col space-y-2">
+          <div class="flex justify-between items-center text-sm font-semibold text-slate-300">
+            <span>Kết quả đã format:</span>
+            <div class="flex items-center space-x-3">
+              <button onclick="copyToClipboard('output-format')" class="text-xs text-blue-400 hover:underline flex items-center space-x-1">
+                <i data-lucide="copy" class="w-3 h-3"></i>
+                <span>Copy</span>
+              </button>
+              <button onclick="downloadSingleText('output-format', 'formatted_code.tex')" class="text-xs text-emerald-400 hover:underline flex items-center space-x-1">
+                <i data-lucide="download" class="w-3 h-3"></i>
+                <span>Tải .tex</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="output-format" readonly class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm text-emerald-400 focus:outline-none resize-none" placeholder="Code được định dạng sẽ xuất hiện ở đây..."></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="formatLaTeX()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-lg shadow-blue-600/20">
+          <i data-lucide="wand-2" class="w-4 h-4"></i>
+          <span>Làm đẹp Code</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- TOOL 2: EXTRACT ALL TIKZ TO SINGLE FILE -->
+    <section id="tool-2" class="hidden space-y-4">
+      <p class="text-sm text-slate-400">Lọc toàn bộ môi trường <code class="text-blue-400">\begin{tikzpicture}...\end{tikzpicture}</code> và gom tất cả lại vào 1 file tổng duy nhất.</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Input -->
+        <div class="flex flex-col space-y-2">
+          <div class="flex justify-between items-center text-sm font-semibold text-slate-300">
+            <div class="flex items-center space-x-2">
+              <span>Code LaTeX gốc:</span>
+              <label class="cursor-pointer text-xs bg-slate-800 hover:bg-slate-700 text-amber-400 px-2 py-0.5 rounded border border-slate-700 transition">
+                <i data-lucide="upload" class="w-3 h-3 inline mr-1"></i>Tải file (.tex/.txt)
+                <input type="file" accept=".tex,.txt" class="hidden" onchange="loadFile(event, 'input-tikz')">
+              </label>
+            </div>
+            <button onclick="clearText('input-tikz')" class="text-xs text-red-400 hover:underline">Xóa</button>
+          </div>
+          <textarea id="input-tikz" class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none" placeholder="Dán nội dung hoặc nạp file .tex / .txt tại đây..."></textarea>
+        </div>
+
+        <!-- Output Main -->
+        <div class="flex flex-col space-y-2">
+          <div class="flex justify-between items-center text-sm font-semibold text-slate-300">
+            <span>Code gốc (Đã bóc sạch TikZ):</span>
+            <div class="flex items-center space-x-3">
+              <button onclick="copyToClipboard('output-main')" class="text-xs text-blue-400 hover:underline flex items-center space-x-1">
+                <i data-lucide="copy" class="w-3 h-3"></i>
+                <span>Copy</span>
+              </button>
+              <button onclick="downloadSingleText('output-main', 'file_goc_khong_tikz.tex')" class="text-xs text-amber-400 hover:underline flex items-center space-x-1">
+                <i data-lucide="download" class="w-3 h-3"></i>
+                <span>Tải file gốc</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="output-main" readonly class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm text-slate-300 focus:outline-none resize-none" placeholder="Nội dung file gốc sau khi đã gỡ các hình TikZ sẽ hiển thị ở đây..."></textarea>
+        </div>
+      </div>
+
+      <!-- Tùy chọn xuất file -->
+      <div class="flex justify-between items-center pt-2 flex-wrap gap-4">
+        <div class="flex items-center space-x-3">
+          <label class="text-sm text-slate-300">Tên file TikZ tổng:</label>
+          <input type="text" id="file-name-tikz" value="tat_ca_hinh_tikz" class="bg-slate-800 border border-slate-700 rounded px-3 py-1 text-sm focus:outline-none focus:border-amber-500 w-48">
+          
+          <label class="text-sm text-slate-300 ml-2">Đuôi file:</label>
+          <select id="file-ext-tikz" class="bg-slate-800 border border-slate-700 text-sm rounded px-2 py-1 focus:outline-none focus:border-amber-500">
+            <option value=".tex" selected>.tex</option>
+            <option value=".txt">.txt</option>
+          </select>
+        </div>
+
+        <button onclick="extractAllTikZToSingleFile()" class="bg-amber-600 hover:bg-amber-500 text-white font-medium px-6 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-lg shadow-amber-600/20">
+          <i data-lucide="scissors" class="w-4 h-4"></i>
+          <span>Tách & Gom Vào 1 File</span>
+        </button>
+      </div>
+
+      <!-- Khung hiển thị file TikZ duy nhất đã gom -->
+      <div id="single-tikz-container" class="hidden mt-6 bg-slate-800 rounded-xl p-5 border border-slate-700 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3 flex-wrap gap-2">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="file-code-2" class="w-5 h-5 text-amber-400"></i>
+            <h3 class="font-bold text-slate-200">File chứa toàn bộ hình TikZ</h3>
+            <span id="tikz-count-badge" class="text-xs bg-amber-500/20 text-amber-300 font-semibold px-2.5 py-0.5 rounded-full">0 hình</span>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <button onclick="copyToClipboard('output-tikz-single')" class="text-xs text-blue-400 hover:underline flex items-center space-x-1">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              <span>Copy TikZ</span>
+            </button>
+            <button onclick="downloadSingleText('output-tikz-single', getTikZFilename())" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition flex items-center space-x-1.5 shadow">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Tải File TikZ Tổng</span>
+            </button>
+          </div>
+        </div>
+
+        <textarea id="output-tikz-single" readonly class="w-full h-80 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm text-amber-300 focus:outline-none resize-none" placeholder="Toàn bộ code TikZ sẽ gom vào đây..."></textarea>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-400">
+    LaTeX & TikZ Utility Web App — Tự động gom toàn bộ TikZ vào 1 file duy nhất
+  </footer>
+
+  <script>
+    lucide.createIcons();
+
+    function switchTab(tabIndex) {
+      const tab1Btn = document.getElementById('tab-1-btn');
+      const tab2Btn = document.getElementById('tab-2-btn');
+      const tool1 = document.getElementById('tool-1');
+      const tool2 = document.getElementById('tool-2');
+
+      if (tabIndex === 1) {
+        tool1.classList.remove('hidden');
+        tool2.classList.add('hidden');
+        tab1Btn.className = "px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-blue-600 text-white";
+        tab2Btn.className = "px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-slate-800 text-slate-400 hover:text-white";
+      } else {
+        tool1.classList.add('hidden');
+        tool2.classList.remove('hidden');
+        tab2Btn.className = "px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-amber-600 text-white";
+        tab1Btn.className = "px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-slate-800 text-slate-400 hover:text-white";
+      }
+    }
+
+    function loadFile(event, targetId) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById(targetId).value = e.target.result;
+      };
+      reader.readAsText(file);
+    }
+
+    // --- TOOL 1: FORMAT LATEX ---
+    function formatLaTeX() {
+      const input = document.getElementById('input-format').value;
+      if (!input.trim()) return;
+
+      const indentSize = parseInt(document.getElementById('indent-size').value, 10);
+      const indentStr = ' '.repeat(indentSize);
+      const lines = input.split('\n');
+      
+      let indentLevel = 0;
+      let result = [];
+
+      lines.forEach(line => {
+        let trimmed = line.trim();
+
+        if (!trimmed) {
+          result.push('');
+          return;
+        }
+
+        if (/^\s*\\end\{/.test(line) || /^\s*\}/.test(line) || /^\s*\]/.test(line)) {
+          indentLevel = Math.max(0, indentLevel - 1);
+        }
+
+        result.push(indentStr.repeat(indentLevel) + trimmed);
+
+        const beginMatches = (trimmed.match(/\\begin\{/g) || []).length;
+        const endMatches = (trimmed.match(/\\end\{/g) || []).length;
+
+        let diff = (beginMatches - endMatches);
+        if (diff === 0 && (trimmed.endsWith('{') || trimmed.endsWith('['))) {
+          diff = 1;
+        }
+
+        indentLevel = Math.max(0, indentLevel + diff);
+      });
+
+      document.getElementById('output-format').value = result.join('\n');
+    }
+
+    // --- TOOL 2: GOM TẤT CẢ TIKZ VÀO 1 FILE ---
+    function extractAllTikZToSingleFile() {
+      const input = document.getElementById('input-tikz').value;
+      if (!input.trim()) return;
+
+      const tikzRegex = /\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g;
+      const matches = input.match(tikzRegex);
+
+      if (!matches || matches.length === 0) {
+        alert('Không tìm thấy môi trường \\begin{tikzpicture} nào trong dữ liệu!');
+        return;
+      }
+
+      let count = 0;
+      let combinedTikZContent = `% ==============================================\n`;
+      combinedTikZContent += `% TỔNG HỢP TẤT CẢ HÌNH TIKZ (${matches.length} HÌNH)\n`;
+      combinedTikZContent += `% ==============================================\n\n`;
+
+      // Thay thế trong file gốc và gom vào file duy nhất
+      const modifiedMainContent = input.replace(tikzRegex, (match) => {
+        count++;
+        combinedTikZContent += `% --- HÌNH SỐ ${count} ---\n${match}\n\n`;
+        return `% [Đã bóc tách hình TikZ số ${count}]`;
+      });
+
+      // Hiển thị kết quả file gốc
+      document.getElementById('output-main').value = modifiedMainContent;
+
+      // Hiển thị kết quả file TikZ duy nhất
+      document.getElementById('output-tikz-single').value = combinedTikZContent.trim();
+      document.getElementById('tikz-count-badge').textContent = `${matches.length} hình TikZ`;
+      
+      document.getElementById('single-tikz-container').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function getTikZFilename() {
+      const name = document.getElementById('file-name-tikz').value || 'tat_ca_hinh_tikz';
+      const ext = document.getElementById('file-ext-tikz').value || '.tex';
+      return `${name}${ext}`;
+    }
+
+    function downloadSingleText(elementId, filename) {
+      const text = document.getElementById(elementId).value;
+      if (!text) return;
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      saveBlob(blob, filename);
+    }
+
+    function saveBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function clearText(id) {
+      document.getElementById(id).value = '';
+    }
+
+    function copyToClipboard(id) {
+      const textarea = document.getElementById(id);
+      if (!textarea.value) return;
+      textarea.select();
+      navigator.clipboard.writeText(textarea.value);
+      alert('Đã copy vào bộ nhớ tạm!');
+    }
+  </script>
+</body>
+</html>
