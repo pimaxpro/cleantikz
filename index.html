@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LaTeX Tree Formatter & TikZ Extractor</title>
+  <title>LaTeX Strict Tree Formatter & TikZ Studio</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -16,9 +16,9 @@
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-3">
         <i data-lucide="folder-tree" class="w-8 h-8 text-blue-400"></i>
-        <h1 class="text-xl font-bold tracking-wide">LaTeX Tree Formatter & TikZ Studio</h1>
+        <h1 class="text-xl font-bold tracking-wide">LaTeX Strict Formatter</h1>
       </div>
-      <span class="text-xs text-slate-400 bg-slate-700 px-3 py-1 rounded-full">Định dạng phân cấp dạng cây</span>
+      <span class="text-xs text-slate-400 bg-slate-700 px-3 py-1 rounded-full">Căn thẳng hàng \begin-\end & {...}</span>
     </div>
   </header>
 
@@ -29,7 +29,7 @@
     <div class="flex border-b border-slate-700 space-x-2">
       <button id="tab-1-btn" onclick="switchTab(1)" class="px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-blue-600 text-white">
         <i data-lucide="sparkles" class="w-4 h-4"></i>
-        <span>1. Format Chuẩn Cấu Trúc Cây (Tree)</span>
+        <span>1. Format Thẳng Hàng Cấu Trúc</span>
       </button>
       <button id="tab-2-btn" onclick="switchTab(2)" class="px-5 py-3 font-medium rounded-t-lg transition flex items-center space-x-2 bg-slate-800 text-slate-400 hover:text-white">
         <i data-lucide="scissors" class="w-4 h-4"></i>
@@ -37,15 +37,15 @@
       </button>
     </div>
 
-    <!-- TOOL 1: FORMAT LATEX TREE -->
+    <!-- TOOL 1: STRICT LATEX TREE FORMATTER -->
     <section id="tool-1" class="space-y-4">
       <div class="flex justify-between items-center flex-wrap gap-2">
-        <p class="text-sm text-slate-400">Tự động đẩy lùi nội dung bên trong tất cả môi trường (<code class="text-blue-400">\begin...\end</code>, ngoặc nhọn <code class="text-blue-400">{}</code>) vào 1 tab chuẩn dạng cây.</p>
+        <p class="text-sm text-slate-400">Căn chuẩn các khối <code class="text-blue-400">\begin...\end</code>, lệnh <code class="text-blue-400">\Loigiai{...}</code>, <code class="text-blue-400">\choice</code> thẳng hàng tuyệt đối.</p>
         <div class="flex items-center space-x-3">
           <label class="text-xs text-slate-300">Độ rộng Tab:</label>
           <select id="indent-size" class="bg-slate-800 border border-slate-700 text-xs rounded px-2 py-1 focus:outline-none focus:border-blue-500">
             <option value="2">2 spaces</option>
-            <option value="4" selected>4 spaces (Standard Tab)</option>
+            <option value="4" selected>4 spaces</option>
           </select>
         </div>
       </div>
@@ -63,32 +63,32 @@
             </div>
             <button onclick="clearText('input-format')" class="text-xs text-red-400 hover:underline">Xóa</button>
           </div>
-          <textarea id="input-format" class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none" placeholder="Dán nội dung LaTeX vào đây..."></textarea>
+          <textarea id="input-format" class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none" placeholder="Dán code LaTeX đề thi / bài tập vào đây..."></textarea>
         </div>
 
         <!-- Output -->
         <div class="flex flex-col space-y-2">
           <div class="flex justify-between items-center text-sm font-semibold text-slate-300">
-            <span>Kết quả Cấu Trúc Cây:</span>
+            <span>Kết quả đã căn chuẩn:</span>
             <div class="flex items-center space-x-3">
               <button onclick="copyToClipboard('output-format')" class="text-xs text-blue-400 hover:underline flex items-center space-x-1">
                 <i data-lucide="copy" class="w-3 h-3"></i>
                 <span>Copy</span>
               </button>
-              <button onclick="downloadSingleText('output-format', 'formatted_tree.tex')" class="text-xs text-emerald-400 hover:underline flex items-center space-x-1">
+              <button onclick="downloadSingleText('output-format', 'formatted_code.tex')" class="text-xs text-emerald-400 hover:underline flex items-center space-x-1">
                 <i data-lucide="download" class="w-3 h-3"></i>
                 <span>Tải .tex</span>
               </button>
             </div>
           </div>
-          <textarea id="output-format" readonly class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm text-emerald-400 focus:outline-none resize-none" placeholder="Code dạng cây chuẩn sẽ xuất hiện ở đây..."></textarea>
+          <textarea id="output-format" readonly class="w-full h-96 bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-sm text-emerald-400 focus:outline-none resize-none" placeholder="Code được căn lề thẳng hàng sẽ hiển thị ở đây..."></textarea>
         </div>
       </div>
 
       <div class="flex justify-end">
-        <button onclick="formatLaTeXTree()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-lg shadow-blue-600/20">
+        <button onclick="formatLaTeXStrict()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2.5 rounded-lg transition flex items-center space-x-2 shadow-lg shadow-blue-600/20">
           <i data-lucide="wand-2" class="w-4 h-4"></i>
-          <span>Format Cấu Trúc Cây</span>
+          <span>Căn Thẳng Hàng Code</span>
         </button>
       </div>
     </section>
@@ -177,7 +177,7 @@
   </main>
 
   <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-400">
-    LaTeX Tree Formatter — Đảm bảo cấu trúc cây phân cấp thụt lề chính xác
+    LaTeX Strict Formatter — Đảm bảo căn thẳng hàng chính xác 100%
   </footer>
 
   <script>
@@ -213,8 +213,8 @@
       reader.readAsText(file);
     }
 
-    // --- THUẬT TOÁN ĐỊNH DẠNG CẤU TRÚC CÂY (TREE FORMATTER) ---
-    function formatLaTeXTree() {
+    // --- THUẬT TOÁN STRICT FORMATTER CĂN THẲNG HÀNG ABSOLUTE ---
+    function formatLaTeXStrict() {
       const input = document.getElementById('input-format').value;
       if (!input.trim()) return;
 
@@ -222,51 +222,70 @@
       const indentStr = ' '.repeat(indentSize);
       const lines = input.split('\n');
       
-      let currentIndent = 0;
-      let formattedLines = [];
+      let indentLevel = 0;
+      let result = [];
 
       lines.forEach(rawLine => {
         let line = rawLine.trim();
 
         if (!line) {
-          formattedLines.push('');
+          result.push('');
           return;
         }
 
-        // Bỏ qua kiểm tra thẻ đóng đối với các dòng comment hoàn toàn
-        const isComment = line.startsWith('%');
-
-        // Đếm các thẻ đóng/mở trên dòng để tính toán trước khi áp dụng indent
-        const opensBegin = isComment ? 0 : (line.match(/\\begin\{[^\}]+\}/g) || []).length;
-        const closesEnd = isComment ? 0 : (line.match(/\\end\{[^\}]+\}/g) || []).length;
-
-        // Nếu dòng bắt đầu bằng \end{...} hoặc dấu đóng ngoặc }, giảm indent ngay cho dòng hiện tại
-        const startsWithClose = !isComment && (/^\s*\\end\{/.test(line) || /^\s*[\}\]]/.test(line));
-
-        if (startsWithClose && currentIndent > 0) {
-          currentIndent--;
+        // Bỏ qua dòng comment
+        if (line.startsWith('%')) {
+          result.push(indentStr.repeat(indentLevel) + line);
+          return;
         }
 
-        // Thêm độ lùi dòng vào kết quả
-        formattedLines.push(indentStr.repeat(currentIndent) + line);
+        // Loại bỏ ngoặc escaped \{ \} và ngoặc trong khối $...$ để tránh đếm nhầm
+        let cleanLine = line
+          .replace(/\\\{/g, '')
+          .replace(/\\\}/g, '')
+          .replace(/\$[^$]*\$/g, '');
 
-        // Nếu dòng không phải đóng ở đầu nhưng có chứa thẻ mở \begin nhiều hơn \end thì tăng độ lùi cho các dòng sau
-        if (!startsWithClose && !isComment) {
-          const netChange = opensBegin - closesEnd;
-          if (netChange > 0) {
-            currentIndent += netChange;
-          } else if (netChange < 0) {
-            currentIndent = Math.max(0, currentIndent + netChange);
-          } else {
-            // Kiểm tra trường hợp đặc biệt: khối mở ngoặc { hoặc [ nằm ở cuối dòng
-            if ((line.endsWith('{') || line.endsWith('[')) && !line.includes('\\end{')) {
-              currentIndent++;
-            }
+        // Đếm các thẻ mở và đóng môi trường/ngoặc
+        const opensBegin = (cleanLine.match(/\\begin\{/g) || []).length;
+        const closesEnd = (cleanLine.match(/\\end\{/g) || []).length;
+
+        // Đếm dấu ngoặc nhọn thuần túy (môi trường / khối lệnh như \Loigiai{ )
+        const openBraces = (cleanLine.match(/\{/g) || []).length;
+        const closeBraces = (cleanLine.match(/\}/g) || []).length;
+
+        // Kiểm tra xem dòng bắt đầu bằng \end{...} hoặc dấu đóng ngoặc }
+        const startsWithCloseEnd = /^\\end\{/.test(line);
+        const startsWithCloseBrace = /^\}/.test(line);
+
+        // Tính toán giảm lề ngay dòng này nếu bắt đầu bằng thẻ đóng
+        if (startsWithCloseEnd || startsWithCloseBrace) {
+          indentLevel = Math.max(0, indentLevel - 1);
+        }
+
+        // Ghi dòng vào kết quả với thụt lề hiện tại
+        result.push(indentStr.repeat(indentLevel) + line);
+
+        // Tính toán thay đổi mức lề cho dòng tiếp theo
+        if (!startsWithCloseEnd && !startsWithCloseBrace) {
+          let netChange = 0;
+
+          if (opensBegin > closesEnd) {
+            netChange += (opensBegin - closesEnd);
+          } else if (openBraces > closeBraces) {
+            netChange += (openBraces - closeBraces);
+          }
+
+          indentLevel = Math.max(0, indentLevel + netChange);
+        } else {
+          // Xử lý bù lề nếu dòng bắt đầu bằng đóng nhưng cuối dòng lại mở tiếp
+          const remainingNet = (opensBegin - closesEnd) + (openBraces - closeBraces);
+          if (remainingNet > 0) {
+            indentLevel += remainingNet;
           }
         }
       });
 
-      document.getElementById('output-format').value = formattedLines.join('\n');
+      document.getElementById('output-format').value = result.join('\n');
     }
 
     // --- TOOL 2: EXTRACT ALL TIKZ TO SINGLE FILE ---
