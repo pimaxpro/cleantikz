@@ -189,7 +189,7 @@
               <span>1. Khai báo gói lệnh (Preamble):</span>
               <span class="text-slate-500 font-normal">Chèn \usepackage{...}</span>
             </label>
-            <textarea id="pdf-preamble" class="w-full h-36 bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs focus:outline-none focus:border-emerald-500 resize-none" placeholder="\usepackage{tikz}&#10;\usepackage{amsmath,amssymb}&#10;\usetikzlibrary{calc,arrows.meta,intersections,shapes.geometric}&#10;\usepackage{tkz-euclide}"></textarea>
+            <textarea id="pdf-preamble" class="w-full h-36 bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-xs focus:outline-none focus:border-emerald-500 resize-none" placeholder="\usepackage{tikz}&#10;\usepackage{amsmath,amssymb}&#10;\usetikzlibrary{calc,arrows,arrows.meta,intersections,shapes.geometric}&#10;\usepackage{tkz-euclide}&#10;\usepackage{xcolor}"></textarea>
           </div>
 
           <!-- 2. Upload custom package -->
@@ -303,7 +303,6 @@
       reader.readAsText(file);
     }
 
-    // --- XỬ LÝ UPLOAD GÓI LỆNH TÙY CHỈNH (.STY / .CLS) ---
     function handlePackageUpload(event) {
       const files = event.target.files;
       if (!files || files.length === 0) return;
@@ -341,13 +340,13 @@
       renderUploadedPackagesList();
     }
 
-    // --- BIÊN DỊCH TIKZ SANG PDF ---
+    // --- SỬA LỖI BIÊN DỊCH TIKZ SANG PDF ---
     async function compileTikZToPDF() {
-      const tikzCode = document.getElementById('input-tikz-pdf').value.trim();
+      const rawTikZCode = document.getElementById('input-tikz-pdf').value;
       const preamble = document.getElementById('pdf-preamble').value.trim();
       const previewBox = document.getElementById('pdf-preview-box');
 
-      if (!tikzCode) {
+      if (!rawTikZCode.trim()) {
         alert('Vui lòng nhập đoạn mã TikZ cần biên dịch!');
         return;
       }
@@ -359,33 +358,51 @@
         </div>
       `;
 
-      // Tạo mã LaTeX hoàn chỉnh bao gồm Preamble + TikZ Code
-      let fullDocument = `\\documentclass[tikz,border=2pt]{standalone}\n`;
+      // 1. Làm sạch ký tự lạ (Non-breaking space / Garbage unicode)
+      const cleanTikZCode = rawTikZCode.replace(/\u00A0/g, ' ');
+
+      // 2. Tạo nội dung file LaTeX chính (main.tex)
+      let mainDoc = `\\documentclass[tikz,border=2pt]{standalone}\n`;
       if (preamble) {
-        fullDocument += `${preamble}\n`;
+        mainDoc += `${preamble}\n`;
       } else {
-        fullDocument += `\\usepackage{tikz}\n\\usepackage{amsmath,amssymb}\n`;
+        mainDoc += `\\usepackage{tikz}\n\\usepackage{amsmath,amssymb}\n\\usetikzlibrary{calc,arrows,arrows.meta,intersections,shapes.geometric}\n\\usepackage{tkz-euclide}\n\\usepackage{xcolor}\n`;
       }
 
-      // Nhúng nội dung các package cá nhân nếu có
+      mainDoc += `\\begin{document}\n`;
+      if (!cleanTikZCode.includes('\\begin{tikzpicture}')) {
+        mainDoc += `\\begin{tikzpicture}\n${cleanTikZCode}\n\\end{tikzpicture}\n`;
+      } else {
+        mainDoc += `${cleanTikZCode}\n`;
+      }
+      mainDoc += `\\end{document}`;
+
+      // 3. Chuẩn hóa mảng tài nguyên gửi lên Server API
+      const resources = [
+        {
+          main: true,
+          name: "main.tex",
+          content: mainDoc
+        }
+      ];
+
+      // Thêm các file .sty / .cls được upload dưới dạng file phụ độc lập
       uploadedPackages.forEach(pkg => {
-        fullDocument += `% --- Custom Package: ${pkg.name} ---\n${pkg.content}\n`;
+        resources.push({
+          main: false,
+          name: pkg.name,
+          content: pkg.content
+        });
       });
 
-      fullDocument += `\\begin{document}\n`;
-      if (!tikzCode.includes('\\begin{tikzpicture}')) {
-        fullDocument += `\\begin{tikzpicture}\n${tikzCode}\n\\end{tikzpicture}\n`;
-      } else {
-        fullDocument += `${tikzCode}\n`;
-      }
-      fullDocument += `\\end{document}`;
-
       try {
-        // Gửi request đến dịch vụ biên dịch LaTeX
         const response = await fetch('https://latex.ytotech.com/build/pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ compiler: 'pdflatex', resources: [{ main: true, content: fullDocument }] })
+          body: JSON.stringify({
+            compiler: 'pdflatex',
+            resources: resources
+          })
         });
 
         if (response.ok) {
@@ -396,13 +413,16 @@
           previewBox.innerHTML = `<iframe src="${currentPdfBlobUrl}" class="w-full h-full border-none"></iframe>`;
           document.getElementById('download-pdf-btn').classList.remove('hidden');
         } else {
-          throw new Error('Lỗi biên dịch LaTeX. Vui lòng kiểm tra lại cấu trúc mã hoặc gói lệnh.');
+          const errorJson = await response.json().catch(() => null);
+          const errorMsg = errorJson ? JSON.stringify(errorJson) : 'Cú pháp LaTeX hoặc package chưa hợp lệ.';
+          throw new Error(errorMsg);
         }
       } catch (err) {
         previewBox.innerHTML = `
-          <div class="text-center p-4 text-red-400 text-xs">
+          <div class="text-center p-4 text-red-400 text-xs overflow-auto max-h-full">
             <i data-lucide="alert-triangle" class="w-8 h-8 mx-auto mb-2 text-red-500"></i>
-            <span>Không thể biên dịch PDF: ${err.message}</span>
+            <span class="font-bold block mb-1">Không thể biên dịch PDF</span>
+            <span class="text-[11px] text-slate-400 font-mono">${err.message}</span>
           </div>
         `;
         lucide.createIcons();
